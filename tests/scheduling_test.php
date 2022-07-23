@@ -21,10 +21,7 @@
  * @copyright  2022 Marcus Green
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-// namespace XXXX;
-
-// require_once($CFG->dirroot.'/course/moodleform_mod.php');
-// require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
@@ -35,7 +32,6 @@ global $CFG;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class scheduling_test extends \advanced_testcase {
-    // use \quiz_question_helper_test_trait;
 
     public function test_something(){
         global $CFG, $USER;
@@ -75,7 +71,7 @@ class scheduling_test extends \advanced_testcase {
         // Add availability conditions.
           $availability =  '{"op":"&","c":[{"type":"date","d":">=","t":1650841200}],"showc":[true]}';
           $DB->set_field('course_modules', 'availability', $availability,
-                        ['id'=>$cm->id]);
+                        ['id' => $cm->id]);
     }
 
 }

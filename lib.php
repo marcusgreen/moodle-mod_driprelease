@@ -55,30 +55,9 @@ function driprelease_add_instance($moduleinstance, $mform = null) {
 
     $moduleinstance->timecreated = time();
 
-    // Add the database record.
-    // $update = new stdClass();
-    // $update->name = $formdata->name;
-    // $update->timemodified = time();
-    // $update->timecreated = time();
-    // $update->course = $formdata->course;
-
     $id = $DB->insert_record('driprelease', $moduleinstance);
     return $id;
 
-    // if ($data = $mform->get_data()) {
-    // $timing['driprelease'] = $schedulerid;
-    // $timing['timestart'] = $data->timestart;
-    // $timing['repeatcount'] =(int) $data->repeatgroup['repeat'];
-    // $timing['sessioncount'] = (int) $data->sessionsgroup['sessioncount'];
-    // $timing['timefinish'] = $data->timefinish;
-    // $timing['activitiespersession'] = $data->activitiespersession;
-    // }
-
-    // $timing = (object) $timing;
-
-    // $id = $DB->insert_record('driprelease_timing',$timing);
-
-    // return $id;
 }
 
 function get_contents(int $courseid, $options): array {
@@ -86,7 +65,7 @@ function get_contents(int $courseid, $options): array {
     return $contents;
 }
 
-function show_contents($mform, $contents ) {
+function show_contents($mform, $contents) {
     global $DB;
     foreach ($contents as $content) {
         if (count($content['modules']) > 0) {
@@ -94,19 +73,18 @@ function show_contents($mform, $contents ) {
 
             foreach ($content['modules'] as $module) {
                 $details = $DB->get_record($module['modname'], ['id' => $module['instance']]);
-                if(isset($details->intro)) {
+                if (isset($details->intro)) {
                     $module['intro'] = pad($details->intro, 12);
                 } else {
-                      $module['intro'] = pad(" ",12," ");
+                    $module['intro'] = pad(" ", 12, " ");
                 }
                 $el = $mform->createElement('advcheckbox', $module['id']);
-                $mform->setDefault('activities['.$module['id'].']',1);
+                $mform->setDefault('activities[' . $module['id'] . ']', 1);
                 $group[] = $el;
-
             }
-            $mform->addElement('html',"<div class='hide'>");
-            $mform->addGroup($group, 'activities','', ' ',true,);
-            $mform->addElement('html',"</div>");
+            $mform->addElement('html', "<div class='hide'>");
+            $mform->addGroup($group, 'activities', '', ' ', true);
+            $mform->addElement('html', "</div>");
         }
     }
     return $mform;
@@ -159,38 +137,6 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
            $moduleinstance->sessioncount = $data->sessionsgroup['sessioncount'];
 
     }
-    // $week = strtotime('7 day', 0);
-    // $activitiespersession = $data->activitiespersession;
-    // $schedulestart = $data->timestart;
-    // $schedulefinish = $data->timefinish;
-    // $duration = $schedulefinish - $schedulestart;
-    // $weekcount = $duration / $week;
-    // $weekspersession = round($weekcount / $data->sessionsgroup['numberofsessions']);
-    // $sessionlength = ($week * $weekspersession);
-
-    // $activities = get_sequence($data);
-
-    // $start = $schedulestart;
-    // for ($week = 0; $week < $weekcount; $week++) {
-    // $sessions[$week] = $schedulestart;
-    // $start = $start + ($week * $weekspersession);
-    // }
-    // $activitycounter = 0;
-    // $from = $schedulestart;
-    // $activitycount = count($activities);
-    // foreach ($sessions as $from) {
-    // $to = $from + $sessionlength;
-    // for ($i = 0; $i < $activitiespersession; $i++) {
-    // if($activitycounter >= $activitycount) {
-    // continue;
-    // }
-    // $availability = '{"op":"&","c":[{"type":"date","d":">=","t":' . $from . '},{"type":"date","d":"<","t":' . $to . '}],"showc":[true,true]}';
-    // $DB->set_field('course_modules', 'availability', $availability, ['id' => $activities[$activitycounter]]);
-    // $activitycounter++;
-    // }
-    // }
-    // }
-
     $moduleinstance->timemodified = time();
     $moduleinstance->id = $moduleinstance->instance;
     return $DB->update_record('driprelease', $moduleinstance);
@@ -198,7 +144,7 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
 
 function get_sequence($data) {
     global $DB;
-    $sql = 'select sequence from {course_sections} where course = :course and sequence > "" order by section';
+    $sql = 'SELECT sequence FRO {course_sections} WHERE course = :course AND sequence > "" ORDER BY section';
     $coursesequence = $DB->get_records_sql($sql, ['course' => $data->course]);
     $activitiesordered = [];
     $i = 0;
@@ -215,7 +161,7 @@ function get_sequence($data) {
 }
 
 /**
- * Removes an instance of the mod_driprelease from the database.
+ * Remove an instance of the mod_driprelease from the database.
  *
  * @param int $id Id of the module instance.
  * @return bool True if successful, false on failure.
@@ -228,7 +174,7 @@ function driprelease_delete_instance($id) {
         return false;
     }
 
-    $DB->delete_records('driprelease', array('id' => $id));
+    $DB->delete_records('driprelease', ['id' => $id]);
 
     return true;
 }
