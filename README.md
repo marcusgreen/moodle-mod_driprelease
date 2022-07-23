@@ -1,4 +1,4 @@
-# Content Scheduler #
+# Drip release #
 
 Make contents available on a timed release basis. For example a set of quizzes can become available, then unavailable one day at a time.
 
