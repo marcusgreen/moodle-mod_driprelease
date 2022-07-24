@@ -74,7 +74,7 @@ $string['activitiespersession_text'] = 'Set the number of activitie that are ava
 $string['activitiespersession_help'] = 'How many items per session, for example if set to 10 and "Repeat every" is set to 2 (weeks), students would see 5 activities per week';
 
 $string['dripreleasename'] = 'String 1';
-$string['pluginadministration'] = 'Content sceduler administration';
+$string['pluginadministration'] = 'Driprelease administration';
 $string['name'] = 'Name';
 $string['descriptions'] = 'Description';
 $string['questions'] = 'Question';

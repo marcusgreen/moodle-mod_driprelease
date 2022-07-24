@@ -60,12 +60,20 @@ function driprelease_add_instance($moduleinstance, $mform = null) {
 
 }
 
-function get_contents(int $courseid, $options): array {
+
+ /**
+  *  Get an array of topics with an array of items in a course
+  *
+  * @param integer $courseid
+  * @param array $options
+  * @return array
+  */
+function get_course_contents(int $courseid, array $options): array {
     $contents = \core_course_external::get_course_contents($courseid, $options);
     return $contents;
 }
 
-function show_contents($mform, $contents) {
+function get_contents_table(MoodleQuickForm $mform, array $contents) {
     global $DB;
     foreach ($contents as $content) {
         if (count($content['modules']) > 0) {
@@ -102,7 +110,7 @@ function get_availability($module) {
         $availability = [];
 
         $record = $DB->get_record('course_modules', ['id' => $module['id']], 'availability');
-    if($record->availability > "") {
+    if ($record->availability > "") {
         $decoded = json_decode($record->availability);
         foreach($decoded->c as $restriction) {
             if($restriction->type == "date") {
@@ -117,7 +125,7 @@ function get_availability($module) {
 
             }
         }
-    }
+        }
         return $availability;
 }
 /**
@@ -134,8 +142,6 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
     global $DB;
     if ($data = $mform->get_data()) {
            $moduleinstance->repeatcount = $data->repeatgroup['repeatcount'];
-           $moduleinstance->sessioncount = $data->sessionsgroup['sessioncount'];
-
     }
     $moduleinstance->timemodified = time();
     $moduleinstance->id = $moduleinstance->instance;

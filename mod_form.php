@@ -41,7 +41,7 @@ class mod_driprelease_mod_form extends moodleform_mod {
      * Defines forms elements
      */
     public function definition() {
-        global $CFG,$COURSE, $PAGE, $OUTPUT,$DB;
+        global $CFG, $COURSE, $PAGE, $OUTPUT ,$DB;
 
         $current = $this->get_current();
 
@@ -53,19 +53,18 @@ class mod_driprelease_mod_form extends moodleform_mod {
         $activitytype = 'quiz';
 
         $options = [["name" => "modname", "value" => $activitytype]];
-        $contents = get_contents($COURSE->id, $options);
+        $contents = get_course_contents($COURSE->id, $options);
 
         $mform = $this->_form;
-
 
         // Adding the "general" fieldset, where all the common settings are shown.
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
         // Adding the standard "name" field.
         $mform->addElement('text', 'name', get_string('name', 'driprelease'), ['size' => '64']);
-        $mform->setType('name',PARAM_TEXT);
+        $mform->setType('name', PARAM_TEXT);
 
-        $mform->setDefault('name',  get_config('driprelease','defaultname'));
+        $mform->setDefault('name',  get_config('driprelease', 'defaultname'));
 
         $this->standard_intro_elements();
 
@@ -138,7 +137,7 @@ class mod_driprelease_mod_form extends moodleform_mod {
                 }
             }
         }
-        $mform = show_contents($mform, $contents);
+        $mform = get_contents_table($mform, $contents);
         $data['wwwroot'] = $CFG->wwwroot;
         $out =  $OUTPUT->render_from_template('mod_driprelease/activities', $data);
         $mform->addElement('HTML',$out);

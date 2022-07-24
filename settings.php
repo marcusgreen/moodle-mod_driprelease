@@ -45,7 +45,7 @@ if ($ADMIN->fulltree) {
                 'driprelease/defaultname',
                 get_string('defaultname', 'driprelease'),
                 get_string('defaultname_text', 'driprelease'),
-                'Content schedule',
+                'Drip release',
                 PARAM_RAW,
                 40
         ));
