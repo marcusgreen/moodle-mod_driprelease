@@ -34,6 +34,8 @@ function driprelease_supports($feature) {
     switch ($feature) {
         case FEATURE_MOD_INTRO:
             return true;
+        case FEATURE_MOD_PURPOSE:
+            return MOD_PURPOSE_ADMINISTRATION;
         default:
             return null;
     }
@@ -73,8 +75,9 @@ function get_course_contents(int $courseid, array $options): array {
     return $contents;
 }
 
-function get_contents_table(MoodleQuickForm $mform, array $contents) {
+function get_contents_table(MoodleQuickForm $mform, array $contents, \stdClass $current) {
     global $DB;
+    $contentcounter = 0;
     foreach ($contents as $content) {
         if (count($content['modules']) > 0) {
             $group = [];
@@ -90,6 +93,9 @@ function get_contents_table(MoodleQuickForm $mform, array $contents) {
                 $mform->setDefault('activities[' . $module['id'] . ']', 1);
                 $group[] = $el;
             }
+            // if (($contentcounter % $current->activitiespersession == 0)) {
+            //     $mform->addElement('html', "<h1>hello</h1>");
+            // }
             $mform->addElement('html', "<div class='hide'>");
             $mform->addGroup($group, 'activities', '', ' ', true);
             $mform->addElement('html', "</div>");
@@ -101,32 +107,31 @@ function pad($string, $lettercount) {
     $chopped = mb_substr(strip_tags($string),0,$lettercount);
     $chopped .= "...";
 
-    $padded = str_pad($chopped,20, " ");
+    $padded = str_pad($chopped, 20, " ");
     return $padded;
 }
 
 function get_availability($module) {
-        global $DB;
-        $availability = [];
+    global $DB;
+    $availability = [];
 
-        $record = $DB->get_record('course_modules', ['id' => $module['id']], 'availability');
+    $record = $DB->get_record('course_modules', ['id' => $module['id']], 'availability');
     if ($record->availability > "") {
         $decoded = json_decode($record->availability);
-        foreach($decoded->c as $restriction) {
-            if($restriction->type == "date") {
+        foreach ($decoded->c as $restriction) {
+            if ($restriction->type == "date") {
                 $operator = $restriction->d;
-                if($operator == ">=") {
-                     $datetime = $restriction->t;
-                     $availability['from'] = date('D d M Y h:h', $datetime);
+                if ($operator == ">=") {
+                    $datetime = $restriction->t;
+                    $availability['from'] = date('D d M Y h:h', $datetime);
                 } else {
-                     $datetime = $restriction->t;
-                     $availability['to'] = date('D d M Y h:h', $datetime);
+                    $datetime = $restriction->t;
+                    $availability['to'] = date('D d M Y h:h', $datetime);
                 }
-
             }
         }
-        }
-        return $availability;
+    }
+    return $availability;
 }
 /**
  * Updates an instance of the mod_driprelease in the database.

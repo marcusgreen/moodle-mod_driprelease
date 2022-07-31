@@ -52,6 +52,7 @@ $string['repeat_help'] =
  'Decides how long the intervals are. E.g. A new
  set of activities will be available every 2 weeks and the currently available ones
  will then become unavailable.';
+$string['session'] = 'Session';
 $string['sessioncount'] = 'Week count';
 $string['sessioncount_text'] = 'Week count help description';
 $string['weeks'] = 'week(s)';

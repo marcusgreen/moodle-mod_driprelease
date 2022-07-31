@@ -123,9 +123,23 @@ class mod_driprelease_mod_form extends moodleform_mod {
         $mform->addElement('header', 'activityheader', get_string('activities', 'mod_driprelease'));
         $mform->setExpanded('activityheader');
 
+        $contentcounter = 0;
+        $sessioncounter = 0;
         foreach ($contents as $content) {
             if (count($content['modules']) > 0) {
                 foreach ($content['modules'] as $module) {
+
+                    if ($contentcounter % ($current->activitiespersession + 1) == 0) {
+                        $sessioncounter++;
+                        $row['issessionrow'] = true;
+                        $row['sessioncounter'] = $sessioncounter;
+                        $data['activities'][] = $row;
+                        $contentcounter++;
+                        continue;
+                    }
+                    $contentcounter++;
+
+
                     $questions = $DB->get_records('quiz_slots',['quizid' => $module['instance']]);
                     $details = $DB->get_record($module['modname'], ['id' => $module['instance']]);
                     $availability = $DB->get_record('course_modules', ['id' => $module['instance']], 'availability');
@@ -137,9 +151,9 @@ class mod_driprelease_mod_form extends moodleform_mod {
                 }
             }
         }
-        $mform = get_contents_table($mform, $contents);
+        //$mform = get_contents_table($mform, $contents, $current);
         $data['wwwroot'] = $CFG->wwwroot;
-        $out =  $OUTPUT->render_from_template('mod_driprelease/activities', $data);
+        $out = $OUTPUT->render_from_template('mod_driprelease/activities', $data);
         $mform->addElement('HTML',$out);
 
         // Add standard elements.
@@ -150,7 +164,7 @@ class mod_driprelease_mod_form extends moodleform_mod {
     }
 
     public function validation($fromform, $data) {
-
+        parent::validation($fromform, $data);
         $errors = [];
         if ($fromform['activitiespersession'] < 1) {
             $errors['activitiespersession'] = get_string('activitiespersessionerror','driprelease');
