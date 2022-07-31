@@ -93,9 +93,7 @@ function get_contents_table(MoodleQuickForm $mform, array $contents, \stdClass $
                 $mform->setDefault('activities[' . $module['id'] . ']', 1);
                 $group[] = $el;
             }
-            // if (($contentcounter % $current->activitiespersession == 0)) {
-            //     $mform->addElement('html', "<h1>hello</h1>");
-            // }
+
             $mform->addElement('html', "<div class='hide'>");
             $mform->addGroup($group, 'activities', '', ' ', true);
             $mform->addElement('html', "</div>");
@@ -111,7 +109,14 @@ function pad($string, $lettercount) {
     return $padded;
 }
 
-function get_availability($module) {
+function calculate_availability(array $module, array $timing, $contentcounter ) {
+    $weekrepeat = $contentcounter * $timing['repeatcount'];
+    $start = strtotime(' + '. $weekrepeat .'week', $timing['start']);
+    $module['start'] = $start;
+    $module['startformatted'] = date('D d M Y h:h', $start);
+    return $module;
+}
+function get_availability(array $module) {
     global $DB;
     $availability = [];
 

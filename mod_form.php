@@ -123,16 +123,25 @@ class mod_driprelease_mod_form extends moodleform_mod {
         $mform->addElement('header', 'activityheader', get_string('activities', 'mod_driprelease'));
         $mform->setExpanded('activityheader');
 
+        $timing['start'] = $current->schedulestart;
+        $timing['end'] = $current->schedulefinish;
+        $timing['repeatcount'] = $current->repeatcount;
+        $timing['persession'] = $current->activitiespersession;
+
+
         $contentcounter = 0;
         $sessioncounter = 0;
         foreach ($contents as $content) {
             if (count($content['modules']) > 0) {
+                //$modules = calculate_availabilities($content['modules'], $timing);
                 foreach ($content['modules'] as $module) {
 
                     if ($contentcounter % ($current->activitiespersession + 1) == 0) {
+                        $module = calculate_availability($module, $timing, $sessioncounter);
                         $sessioncounter++;
                         $row['issessionrow'] = true;
                         $row['sessioncounter'] = $sessioncounter;
+                        $row['startformatted'] = $module['startformatted'];
                         $data['activities'][] = $row;
                         $contentcounter++;
                         continue;
@@ -151,7 +160,7 @@ class mod_driprelease_mod_form extends moodleform_mod {
                 }
             }
         }
-        //$mform = get_contents_table($mform, $contents, $current);
+        $mform = get_contents_table($mform, $contents, $current);
         $data['wwwroot'] = $CFG->wwwroot;
         $out = $OUTPUT->render_from_template('mod_driprelease/activities', $data);
         $mform->addElement('HTML',$out);
