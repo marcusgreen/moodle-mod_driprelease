@@ -123,12 +123,7 @@ class mod_driprelease_mod_form extends moodleform_mod {
         $mform->addElement('header', 'activityheader', get_string('activities', 'mod_driprelease'));
         $mform->setExpanded('activityheader');
 
-        $timing['start'] = $current->schedulestart;
-        $timing['end'] = $current->schedulefinish;
-        $timing['repeatcount'] = $current->repeatcount;
-        $timing['persession'] = $current->activitiespersession;
-
-        $data = get_content_data($contents, $current, $timing);
+        $data = get_content_data($contents, $current);
         $mform = get_contents_table($mform, $contents, $current);
         $data['wwwroot'] = $CFG->wwwroot;
         $out = $OUTPUT->render_from_template('mod_driprelease/activities', $data);

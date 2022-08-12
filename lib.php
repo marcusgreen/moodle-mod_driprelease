@@ -102,7 +102,11 @@ function get_contents_table(MoodleQuickForm $mform, array $contents, \stdClass $
     return $mform;
 }
 
-function get_content_data( $contents, $current, $timing) :array {
+function get_content_data($contents, $current) :array {
+    $timing['start'] = $current->schedulestart;
+    $timing['end'] = $current->schedulefinish;
+    $timing['repeatcount'] = $current->repeatcount;
+    $timing['persession'] = $current->activitiespersession;
     global $DB;
     $contentcounter = 0;
     $sessioncounter = 0;
