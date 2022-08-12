@@ -101,6 +101,42 @@ function get_contents_table(MoodleQuickForm $mform, array $contents, \stdClass $
     }
     return $mform;
 }
+
+function get_content_data( $contents, $current, $timing) :array {
+    global $DB;
+    $contentcounter = 0;
+    $sessioncounter = 0;
+    foreach ($contents as $content) {
+        if (count($content['modules']) > 0) {
+            //$modules = calculate_availabilities($content['modules'], $timing);
+            foreach ($content['modules'] as $module) {
+
+                if ($contentcounter % ($current->activitiespersession + 1) == 0) {
+                    $module = calculate_availability($module, $timing, $sessioncounter);
+                    $sessioncounter++;
+                    $row['issessionrow'] = true;
+                    $row['sessioncounter'] = $sessioncounter;
+                    $row['startformatted'] = $module['startformatted'];
+                    $data['activities'][] = $row;
+                    $contentcounter++;
+                    continue;
+                }
+                $contentcounter++;
+
+
+                $questions = $DB->get_records('quiz_slots',['quizid' => $module['instance']]);
+                $details = $DB->get_record($module['modname'], ['id' => $module['instance']]);
+                $availability = $DB->get_record('course_modules', ['id' => $module['instance']], 'availability');
+                $module['questioncount'] = count($questions);
+                $module['name'] = $details->name;
+                $module['intro'] = strip_tags($details->intro);
+                $module['availability']  = get_availability($module);
+                $data['activities'][] = $module;
+            }
+        }
+    }
+    return $data;
+}
 function pad($string, $lettercount) {
     $chopped = mb_substr(strip_tags($string),0,$lettercount);
     $chopped .= "...";
