@@ -125,27 +125,29 @@ function get_content_data(array $contents, stdClass $current) :array {
                 if ($contentcounter % ($current->activitiespersession + 1) == 0) {
                     $module = calculate_availability($module, $timing, $sessioncounter);
                     $availability['start'] = $module['start'];
+                    $availability['end'] = $module['end'];
                     $sessioncounter++;
                     $row['issessionrow'] = true;
                     $row['sessioncounter'] = $sessioncounter;
                     $row['startformatted'] = $module['startformatted'];
+                    $row['endformatted'] = $module['endformatted'];
                     $row['start'] = $module['start'];
                     $data['activities'][] = $row;
-                    $contentcounter++;
-                    continue;
+                    //$contentcounter++;
+                    //continue;
                 }
                 $contentcounter++;
 
-
                 $questions = $DB->get_records('quiz_slots',['quizid' => $module['instance']]);
                 $details = $DB->get_record($module['modname'], ['id' => $module['instance']]);
-                //$availability = $DB->get_record('course_modules', ['id' => $module['instance']], 'availability');
+                // $availability = $DB->get_record('course_modules', ['id' => $module['instance']], 'availability');
 
                 $module['questioncount'] = count($questions);
                 $module['name'] = $details->name;
                 $module['intro'] = strip_tags($details->intro);
                 $module['availability']  = get_availability($module);
                 $module['dripavailability']['start'] = $availability['start'];
+                $module['dripavailability']['end'] = $availability['end'];
                 $module['issessionrow'] = false;
                 $data['activities'][] = $module;
             }
@@ -164,8 +166,11 @@ function pad($string, $lettercount) {
 function calculate_availability(array $module, array $timing, $contentcounter ) {
     $weekrepeat = $contentcounter * $timing['repeatcount'];
     $start = strtotime(' + '. $weekrepeat .'week', $timing['start']);
+    $end = strtotime(' + '. $weekrepeat .'week', $timing['end']);
     $module['start'] = $start;
+    $module['end'] = $end;
     $module['startformatted'] = date('D d M Y h:h', $start);
+    $module['endformatted'] = date('D d M Y h:h', $end);
     return $module;
 }
 function get_availability(array $module) {
@@ -206,14 +211,18 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
 
     $contents = get_course_contents($COURSE->id, $options);
     $data = get_content_data($contents, $mform->get_current());
-    update_availability($data['activities']);
 
     if ($formdata = $mform->get_data()) {
            $moduleinstance->repeatcount = $formdata->repeatgroup['repeatcount'];
     }
     $moduleinstance->timemodified = time();
     $moduleinstance->id = $moduleinstance->instance;
-    return $DB->update_record('driprelease', $moduleinstance);
+    $result = $DB->update_record('driprelease', $moduleinstance);
+    update_availability($data['activities']);
+    rebuild_course_cache($COURSE->id);
+
+    return $result;
+
 }
 /**
  * $fromform = $mform->get_data();
@@ -222,17 +231,87 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
  * @return void
  */
 function update_availability($data) {
-    global $DB;
-
+    global $DB, $COURSE, $USER;
+    // https://moodledev.io/docs/apis/subsystems/availability
+    // $courseavailability = new info($COURSE->id, null, null);
     foreach ($data as $module) {
+
         if (!$module['issessionrow']) {
+            $av = $DB->get_field('course_modules','availability', ['id' => $module['id']]);
+            $availablestart = [
+                'type' => 'date',
+                'd' => ">=",
+                't' => $module['dripavailability']['start']
+            ];
+            $availablend = [
+                'type' => 'date',
+                'd' => "<",
+                't' => $module['dripavailability']['end']
+            ];
+            if ($av) {
+                $avob = json_decode($av);
+                foreach ($avob->c as $key => $criteria) {
+                    if ($criteria->type == 'date') {
+                        unset($avob->c[$key]);
+                    }
+                }
+                array_unshift($avob->c, $availablend);
+                array_unshift($avob->c, $availablestart);
+
+            } else {
+                $avob = (object) [
+                'op' => '&',
+                'c' => [
+                       '0' => $availablestart,
+                       '1' => $availablend
+                      ],
+                'showc' => [true, true],
+                ];
+
+            }
+
+            $DB->set_field('course_modules', 'availability', json_encode($avob), ['id' => $module['id']]);
+
+            // if ($av) {
+            // $availability = json_decode($av);
+            // foreach ($availability->c as $key => $criteria) {
+            // if ($criteria->type == "date" && $criteria->d == ">=") {
+            // $availability->c[$key]->t = $module['dripavailability']['start'];
+            // }
+            // if ($criteria->type == "date" && $criteria->d == "<") {
+            // $availability->c[$key]->t = $module['dripavailability']['end'];
+            // }
+            // }
+            // }
             // $modinfo = get_fast_modinfo($COURSE->id, $USER->id);
-            // $info = $modinfo->get_cm($module['id']);
+            // $cm = $modinfo->get_cm($module['id']);
+            // $info = new info_module($cm);
+            // $av = json_encode($info->availability);
+            // $tree = $info->get_availability_tree();
 
+            // foreach ($tree->get_all_children('availability_date\condition') as $key => $cond) {
+            // if ($cond->direction == '>=') {
+            // $cond->time = $module['dripavailability']['start'];
+
+             // }
+                // $condcmid = $cond->get_cmid($COURSE->id, $othercm->id, null);
+                // if (!empty($condcmid)) {
+                // self::$modsusedincondition[$course->id][$condcmid] = true;
+                // }
+            // }
             // $availability = json_decode($info->availability);
-            $s = '{"op":"&","c":[{"type":"date","d":">=","t":'.$module['dripavailability']['start'].'}],"showc":[true]}';
-            $DB->set_field('course_modules', 'availability', $s, ['id' => $module['id']]);
-
+            // foreach ($availability->c as $key => $criteria) {
+            // if ($criteria->type == "date" && $criteria->d == ">=") {
+            // $availability->c[$key]->t = $module['dripavailability']['start'];
+            // }
+            // if ($criteria->type == "date" && $criteria->d == "=<") {
+            // $availability->c[$key]->t = $module['dripavailability']['end'];
+            // }
+            // }
+            // $availability = '{"op":"&","c":[{"type":"date","d":">=","t":'.$module['dripavailability']['start'].'}],"showc":[true]}';
+            // $availability .= '{"op":"&","c":[{"type":"date","d":"=<","t":'.$module['dripavailability']['end'].'}],"showc":[true]}';
+            // {"op":"&","c":[{"type":"date","d":">=","t":1657994400},{"type":"date","d":"<","t":1660950000}],"showc":[true,true]} |
+            // $DB->set_field('course_modules', 'availability', $availability, ['id' => $module['id']]);
         }
 
     }
