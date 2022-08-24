@@ -210,16 +210,16 @@ function driprelease_update_instance($moduleinstance, $mform = null) {
     $options = [["name" => "modname", "value" => 'quiz']];
 
     $contents = get_course_contents($COURSE->id, $options);
-    $data = get_content_data($contents, $mform->get_current());
 
     if ($formdata = $mform->get_data()) {
-           $moduleinstance->repeatcount = $formdata->repeatgroup['repeatcount'];
+           $formdata->repeatcount = $formdata->repeatgroup['repeatcount'];
     }
+    $data = get_content_data($contents, $formdata);
+
     $moduleinstance->timemodified = time();
     $moduleinstance->id = $moduleinstance->instance;
     $result = $DB->update_record('driprelease', $moduleinstance);
     update_availability($data['activities']);
-    rebuild_course_cache($COURSE->id);
 
     return $result;
 
@@ -272,54 +272,16 @@ function update_availability($data) {
 
             $DB->set_field('course_modules', 'availability', json_encode($avob), ['id' => $module['id']]);
 
-            // if ($av) {
-            // $availability = json_decode($av);
-            // foreach ($availability->c as $key => $criteria) {
-            // if ($criteria->type == "date" && $criteria->d == ">=") {
-            // $availability->c[$key]->t = $module['dripavailability']['start'];
-            // }
-            // if ($criteria->type == "date" && $criteria->d == "<") {
-            // $availability->c[$key]->t = $module['dripavailability']['end'];
-            // }
-            // }
-            // }
-            // $modinfo = get_fast_modinfo($COURSE->id, $USER->id);
-            // $cm = $modinfo->get_cm($module['id']);
-            // $info = new info_module($cm);
-            // $av = json_encode($info->availability);
-            // $tree = $info->get_availability_tree();
-
-            // foreach ($tree->get_all_children('availability_date\condition') as $key => $cond) {
-            // if ($cond->direction == '>=') {
-            // $cond->time = $module['dripavailability']['start'];
-
-             // }
-                // $condcmid = $cond->get_cmid($COURSE->id, $othercm->id, null);
-                // if (!empty($condcmid)) {
-                // self::$modsusedincondition[$course->id][$condcmid] = true;
-                // }
-            // }
-            // $availability = json_decode($info->availability);
-            // foreach ($availability->c as $key => $criteria) {
-            // if ($criteria->type == "date" && $criteria->d == ">=") {
-            // $availability->c[$key]->t = $module['dripavailability']['start'];
-            // }
-            // if ($criteria->type == "date" && $criteria->d == "=<") {
-            // $availability->c[$key]->t = $module['dripavailability']['end'];
-            // }
-            // }
-            // $availability = '{"op":"&","c":[{"type":"date","d":">=","t":'.$module['dripavailability']['start'].'}],"showc":[true]}';
-            // $availability .= '{"op":"&","c":[{"type":"date","d":"=<","t":'.$module['dripavailability']['end'].'}],"showc":[true]}';
-            // {"op":"&","c":[{"type":"date","d":">=","t":1657994400},{"type":"date","d":"<","t":1660950000}],"showc":[true,true]} |
-            // $DB->set_field('course_modules', 'availability', $availability, ['id' => $module['id']]);
         }
 
     }
+    rebuild_course_cache($COURSE->id);
+
 }
 
 function get_sequence($data) {
     global $DB;
-    $sql = 'SELECT sequence FRO {course_sections} WHERE course = :course AND sequence > "" ORDER BY section';
+    $sql = 'SELECT sequence FROM {course_sections} WHERE course = :course AND sequence > "" ORDER BY section';
     $coursesequence = $DB->get_records_sql($sql, ['course' => $data->course]);
     $activitiesordered = [];
     $i = 0;
